@@ -145,10 +145,17 @@ class Converter(object):
         pass
 
     def _dith_reset(self):
-        pass
+        if self.dith:
+            self.r_nerr = 0
+            self.g_nerr = 0
+            self.b_nerr = 0
 
     def _dith_next(self):
         pass
 
-    def _classify_pixel(self):
-        pass
+    @staticmethod
+    def _classify_pixel(value, bits):
+        import math
+        tmp = 1 << (8 - bits)
+        val = math.ceil(value / tmp) * tmp
+        return val if val >= 0 else 0
