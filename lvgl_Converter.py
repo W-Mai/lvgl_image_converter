@@ -52,9 +52,9 @@ class Converter(object):
         self.path = None  # Path to the image file
 
         # Helper variables
-        self.r_act = None
-        self.b_act = None
-        self.g_act = None
+        self.r_act = 0
+        self.b_act = 0
+        self.g_act = 0
 
         # For dithering
         self.r_earr = None  # Classification error for next row of pixels
@@ -150,8 +150,91 @@ class Converter(object):
             self.g_nerr = 0
             self.b_nerr = 0
 
-    def _dith_next(self):
-        pass
+    def _dith_next(self, r, g, b, x):
+        if self.dith:
+            self.r_act = r + self.r_nerr + self.r_earr[x + 1]
+            self.r_earr[x + 1] = 0
+
+            self.g_act = g + self.g_nerr + self.g_earr[x + 1]
+            self.g_earr[x + 1] = 0
+
+            self.b_act = b + self.b_nerr + self.b_earr[x + 1]
+            self.b_earr[x + 1] = 0
+
+            if self.cf == self.FLAG.CF_TRUE_COLOR_332:
+                self.r_act = self._classify_pixel(self.r_act, 3)
+                self.g_act = self._classify_pixel(self.g_act, 3)
+                self.b_act = self._classify_pixel(self.b_act, 2)
+
+                if self.r_act > 0xE0: self.r_act = 0xE0
+                if self.g_act > 0xE0: self.g_act = 0xE0
+                if self.b_act > 0xC0: self.b_act = 0xC0
+
+            elif self.cf == self.FLAG.CF_TRUE_COLOR_565 or self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
+
+                self.r_act = self._classify_pixel(self.r_act, 5)
+                self.g_act = self._classify_pixel(self.g_act, 6)
+                self.b_act = self._classify_pixel(self.b_act, 5)
+
+                if self.r_act > 0xF8: self.r_act = 0xF8
+                if self.g_act > 0xFC: self.g_act = 0xFC
+                if self.b_act > 0xF8: self.b_act = 0xF8
+
+            elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
+                self.r_act = self._classify_pixel(self.r_act, 8)
+                self.g_act = self._classify_pixel(self.g_act, 8)
+                self.b_act = self._classify_pixel(self.b_act, 8)
+
+                if self.r_act > 0xFF: self.r_act = 0xFF
+                if self.g_act > 0xFF: self.g_act = 0xFF
+                if self.b_act > 0xFF: self.b_act = 0xFF
+
+            self.r_err = r - self.r_act
+            self.g_err = g - self.g_act
+            self.b_err = b - self.b_act
+
+            self.r_nerr = round((7 * self.r_err) / 16)
+            self.g_nerr = round((7 * self.g_err) / 16)
+            self.b_nerr = round((7 * self.b_err) / 16)
+
+            self.r_earr[x] += round((3 * self.r_err) / 16)
+            self.g_earr[x] += round((3 * self.g_err) / 16)
+            self.b_earr[x] += round((3 * self.b_err) / 16)
+
+            self.r_earr[x + 1] += round((5 * self.r_err) / 16)
+            self.g_earr[x + 1] += round((5 * self.g_err) / 16)
+            self.b_earr[x + 1] += round((5 * self.b_err) / 16)
+
+            self.r_earr[x + 2] += round(self.r_err / 16)
+            self.g_earr[x + 2] += round(self.g_err / 16)
+            self.b_earr[x + 2] += round(self.b_err / 16)
+
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_332:
+            self.r_act = self._classify_pixel(r, 3)
+            self.g_act = self._classify_pixel(g, 3)
+            self.b_act = self._classify_pixel(b, 2)
+
+            if self.r_act > 0xE0: self.r_act = 0xE0
+            if self.g_act > 0xE0: self.g_act = 0xE0
+            if self.b_act > 0xC0: self.b_act = 0xC0
+
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_565 or self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
+            self.r_act = self._classify_pixel(r, 5)
+            self.g_act = self._classify_pixel(g, 6)
+            self.b_act = self._classify_pixel(b, 5)
+
+            if self.r_act > 0xF8: self.r_act = 0xF8
+            if self.g_act > 0xFC: self.g_act = 0xFC
+            if self.b_act > 0xF8: self.b_act = 0xF8
+
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
+            self.r_act = self._classify_pixel(r, 8)
+            self.g_act = self._classify_pixel(g, 8)
+            self.b_act = self._classify_pixel(b, 8)
+
+            if self.r_act > 0xFF: self.r_act = 0xFF
+            if self.g_act > 0xFF: self.g_act = 0xFF
+            if self.b_act > 0xFF: self.b_act = 0xFF
 
     @staticmethod
     def _classify_pixel(value, bits):
