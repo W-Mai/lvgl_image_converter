@@ -105,8 +105,9 @@ class Converter(object):
         if palette_size:
             img_tmp = Image.new("RGB", (self.w, self.h))
             img_tmp.paste(img_tmp, self.img)
-            img_tmp = img_tmp.convert(mode="P", colors=palette_size)
-            real_palette_size = self.img.getcolors()  # The real number of colors in the image's palette
+            self.img = img_tmp.convert(mode="P", colors=palette_size)
+            real_palette_size = self.img.getcolors()[0][0]  # The real number of colors in the image's palette
+            print(self.img.getcolors())
             real_palette = self.img.getpalette()
             for i in range(palette_size):
                 if i < real_palette_size:
@@ -179,6 +180,52 @@ class Converter(object):
             y_end, x_end = 1, len(self.d_out)
             i = 1
 
+        tmpArr = []
+
+        def append_and_increase():
+            nonlocal i, tmpArr
+            tmpArr.append(f"{self.d_out[i]:02X}")
+            i += 1
+
+        for y in range(y_end):
+            c_array += "\n  "
+            for x in range(x_end):
+                if self.cf == self.FLAG.CF_TRUE_COLOR_332:
+                    append_and_increase()
+                    if self.alpha: append_and_increase()
+                elif self.cf in (self.FLAG.CF_TRUE_COLOR_565, self.FLAG.CF_TRUE_COLOR_565_SWAP):
+                    append_and_increase()
+                    append_and_increase()
+                    if self.alpha: append_and_increase()
+                elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
+                    append_and_increase()
+                    append_and_increase()
+                    append_and_increase()
+                    append_and_increase()
+                elif self.cf in (self.FLAG.CF_ALPHA_1_BIT, self.FLAG.CF_INDEXED_1_BIT):
+                    if x & 0x7 == 0: append_and_increase()
+                elif self.cf in (self.FLAG.CF_ALPHA_2_BIT, self.FLAG.CF_INDEXED_2_BIT):
+                    if x & 0x3 == 0: append_and_increase()
+                elif self.cf in (self.FLAG.CF_ALPHA_4_BIT, self.FLAG.CF_INDEXED_4_BIT):
+                    if x & 0x1 == 0: append_and_increase()
+                elif self.cf in (self.FLAG.CF_ALPHA_8_BIT, self.FLAG.CF_INDEXED_8_BIT):
+                    append_and_increase()
+                elif self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
+                    append_and_increase()
+
+        tmpStr = ''
+        if self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
+            tmpStr = ', \n'.join(
+                ', '.join(tmpArr[(x_end // 16) * x: (x_end // 16) * x + 16]) for x in range(x_end // 16))
+        else:
+            tmpStr = ', \n'.join(', '.join(tmpArr[y * x_end: (y + 1) * x_end]) for y in range(y_end))
+
+        if self.cf in (self.FLAG.CF_TRUE_COLOR_332, self.FLAG.CF_TRUE_COLOR_565, self.FLAG.CF_TRUE_COLOR_565_SWAP,
+                       self.FLAG.CF_TRUE_COLOR_888):
+            c_array = c_array + tmpStr + "\n#endif"
+
+        return c_array
+
     def get_c_header(self) -> AnyStr:
         c_header = r'''#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
@@ -233,7 +280,7 @@ const lv_img_dsc_t {self.out_name} = {{
         pass
 
     def _conv_px(self, x, y):
-        c = self.img.getpixel((x, y))
+        c = getColorFromPalette(self.img.getpalette(), self.img.getpixel((x, y)))
 
         a = c[3] if len(c) == 4 else 0xFF
         r, g, b = c[:3]
