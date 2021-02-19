@@ -4,7 +4,7 @@ from PIL import Image
 
 
 def getColorFromPalette(palette, index):
-    return [palette[index + i] for i in range(3)]
+    return [palette[3 * index + i] for i in range(3)]
 
 
 class _const:
@@ -38,7 +38,7 @@ class _const:
 class Converter(object):
     FLAG = _const()
 
-    def __init__(self, path, out_name, dith: bool, cf):
+    def __init__(self, path, out_name: str, dith: bool, cf):
 
         self.dith = None  # Dithering enable/disable
         self.w = None  # Image width
@@ -127,13 +127,104 @@ class Converter(object):
                 self.img.paste(img_tmp)
 
     def format_to_c_array(self) -> AnyStr:
-        pass
+        c_array = ""
+        i = 0
+        y_end, x_end = self.h, self.w
+
+        if self.cf == self.FLAG.CF_TRUE_COLOR_332:
+            c_array += "\n#if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8"
+            c_array += "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit, Alpha 8 bit */" if self.alpha \
+                else "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit*/"
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_565:
+            c_array += "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP == 0"
+            c_array += "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit, Alpha 8 bit*/" if self.alpha \
+                else "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit*/"
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
+            c_array += "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP != 0"
+            c_array += "\n  /*Pixel format:  Blue: 5 bit Green: 6 bit, Red: 5 bit, Alpha 8 bit  BUT the 2  color bytes are swapped*/" if self.alpha \
+                else "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit BUT the 2 bytes are swapped*/"
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
+            c_array += "\n#if LV_COLOR_DEPTH == 32"
+            c_array += "\n  /*Pixel format: Blue: 8 bit, Green: 8 bit, Red: 8 bit, Fix 0xFF: 8 bit, */" if self.alpha \
+                else "\n  /*Pixel format:  Blue: 8 bit, Green: 8 bit, Red: 8 bit, Alpha: 8 bit*/"
+        elif self.cf == self.FLAG.CF_INDEXED_1_BIT:
+            c_array += "\n"
+            for p in range(2):
+                tmpStr = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmpStr = ", ".join([tmpStr, f"\t/*Color of index {p}*/\n"])
+                c_array += tmpStr
+            i = 2 * 4
+        elif self.cf == self.FLAG.CF_INDEXED_2_BIT:
+            c_array += "\n"
+            for p in range(4):
+                tmpStr = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmpStr = ", ".join([tmpStr, f"\t/*Color of index {p}*/\n"])
+                c_array += tmpStr
+            i = 4 * 4
+        elif self.cf == self.FLAG.CF_INDEXED_4_BIT:
+            c_array += "\n"
+            for p in range(16):
+                tmpStr = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmpStr = ", ".join([tmpStr, f"\t/*Color of index {p}*/\n"])
+                c_array += tmpStr
+            i = 16 * 4
+        elif self.cf == self.FLAG.CF_INDEXED_8_BIT:
+            c_array += "\n"
+            for p in range(256):
+                tmpStr = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmpStr = ", ".join([tmpStr, f"\t/*Color of index {p}*/\n"])
+                c_array += tmpStr
+            i = 256 * 4
+        elif self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
+            y_end, x_end = 1, len(self.d_out)
+            i = 1
 
     def get_c_header(self) -> AnyStr:
-        pass
+        c_header = r'''#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+#include "lvgl.h"
+#else
+#include "../lvgl/lvgl.h"
+#endif
+#ifndef LV_ATTRIBUTE_MEM_ALIGN
+#define LV_ATTRIBUTE_MEM_ALIGN
+#endif
+'''
+        attr_name = "LV_ATTRIBUTE_IMG_" + self.out_name.upper()
+        c_header = rf'''{c_header}
+#ifndef {attr_name}
+#define {attr_name}
+#endif
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST {attr_name} uint8_t {self.out_name}_map[] = {{'''
+        return c_header
 
     def get_c_footer(self, cf) -> AnyStr:
-        pass
+        c_footer = rf'''
+}}
+const lv_img_dsc_t {self.out_name} = {{
+  .header.always_zero = 0,
+  .header.w = {self.w},
+  .header.h = {self.h},
+  .data_size = '''
+        c_footer += \
+            {
+                self.FLAG.CF_TRUE_COLOR: f"{self.w * self.h} * LV_COLOR_SIZE / 8,\n  .header.cf = LV_IMG_CF_TRUE_COLOR,",
+                self.FLAG.CF_TRUE_COLOR_ALPHA: f"{self.w * self.h} * LV_IMG_PX_SIZE_ALPHA_BYTE,\n  .header.cf = "
+                                               f"LV_IMG_CF_TRUE_COLOR_ALPHA,",
+                self.FLAG.CF_TRUE_COLOR_CHROMA: f"{self.w * self.h} * LV_COLOR_SIZE / 8,\n  .header.cf = "
+                                                f"LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED,",
+                self.FLAG.CF_ALPHA_1_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_1BIT,",
+                self.FLAG.CF_ALPHA_2_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_2BIT,",
+                self.FLAG.CF_ALPHA_4_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_4BIT,",
+                self.FLAG.CF_ALPHA_8_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_8BIT,",
+                self.FLAG.CF_INDEXED_1_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_1BIT,",
+                self.FLAG.CF_INDEXED_2_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_2BIT,",
+                self.FLAG.CF_INDEXED_4_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_4BIT,",
+                self.FLAG.CF_INDEXED_8_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_8BIT,",
+                self.FLAG.CF_RAW: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW,",
+                self.FLAG.CF_RAW_ALPHA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_ALPHA,",
+                self.FLAG.CF_RAW_CHROMA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_CHROMA_KEYED,"
+            }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}}\n"
+        return c_footer
 
     def download_c(self):
         pass
@@ -142,7 +233,86 @@ class Converter(object):
         pass
 
     def _conv_px(self, x, y):
-        pass
+        c = self.img.getpixel((x, y))
+
+        a = c[3] if len(c) == 4 else 0xFF
+        r, g, b = c[:3]
+
+        self._dith_next(r, g, b, x)
+
+        if self.cf == self.FLAG.CF_TRUE_COLOR_332:
+            c8 = self.r_act | (self.g_act >> 3) | (self.b_act >> 6)  # RGB332
+            self.d_out.append(c8)
+            if self.alpha: self.d_out.append(a)
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_565:
+            c16 = (self.r_act << 8) | (self.g_act << 3) | (self.b_act >> 3)  # RGB565
+            self.d_out.append(c16 & 0xFF)
+            self.d_out.append((c16 >> 8) & 0xFF)
+            if self.alpha: self.d_out.append(a)
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
+            c16 = (self.r_act << 8) | (self.g_act << 3) | (self.b_act >> 3)  # RGB565 SWAP
+            self.d_out.append((c16 >> 8) & 0xFF)
+            self.d_out.append(c16 & 0xFF)
+            if self.alpha: self.d_out.append(a)
+        elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
+            self.d_out.append(self.b_act)
+            self.d_out.append(self.g_act)
+            self.d_out.append(self.r_act)
+            self.d_out.append(a)
+        elif self.cf == self.FLAG.CF_ALPHA_1_BIT:
+            w = self.w >> 3
+            if self.w & 0x07: w += 1
+            p = w * y + (x >> 3)
+            if not self.d_out[p]: self.d_out[p] = 0  # Clear the bits first
+            if a > 0x80: self.d_out[p] |= 1 << (7 - (x & 0x7))
+        # elif self.cf == self.FLAG.CF_ALPHA_2_BIT:
+        # w = self.w >> 2
+        # if (self.w & 0x03) w++
+        #
+        # p = w * y + (x >> 2)
+        # if (!isset(self.d_out[p])) self.d_out[p] = 0 # Clear the bits first
+        # self.d_out[p] |= (a >> 6) << (6 - ((x & 0x3) * 2))
+        #
+        # elif self.cf == self.FLAG.CF_ALPHA_4_BIT:
+        # w = self.w >> 1
+        # if (self.w & 0x01) w++
+        #
+        # p = w * y + (x >> 1)
+        # if (!isset(self.d_out[p])) self.d_out[p] = 0 # Clear the bits first
+        # self.d_out[p] |= (a >> 4) << (4 - ((x & 0x1) * 4))
+        #
+        # elif self.cf == self.FLAG.CF_ALPHA_8_BIT:
+        # p = self.w * y + x
+        # self.d_out[p] = a
+        #
+        # elif self.cf == self.FLAG.CF_INDEXED_1_BIT:
+        # w = self.w >> 3
+        # if (self.w & 0x07) w++
+        #
+        # p = w * y + (x >> 3) + 8 # +8 for the palette
+        # if (!isset(self.d_out[p])) self.d_out[p] = 0 # Clear the bits first
+        # self.d_out[p] |= (c & 0x1) << (7 - (x & 0x7))
+        #
+        # elif self.cf == self.FLAG.CF_INDEXED_2_BIT:
+        # w = self.w >> 2
+        # if (self.w & 0x03) w++
+        #
+        # p = w * y + (x >> 2) + 16 # +16 for the palette
+        # if (!isset(self.d_out[p])) self.d_out[p] = 0 # Clear the bits first
+        # self.d_out[p] |= (c & 0x3) << (6 - ((x & 0x3) * 2))
+        #
+        # elif self.cf == self.FLAG.CF_INDEXED_4_BIT:
+        # w = self.w >> 1
+        # if (self.w & 0x01) w++
+        #
+        # p = w * y + (x >> 1) + 64 # +64 for the palette
+        # if (!isset(self.d_out[p])) self.d_out[p] = 0 # Clear the bits first
+        # self.d_out[p] |= (c & 0xF) << (4 - ((x & 0x1) * 4))
+        #
+        # elif self.cf == self.FLAG.CF_INDEXED_8_BIT:
+        # p = self.w * y + x + 1024 / *+1024
+        # for the palette * /
+        # self.d_out[p] = c & 0xFF
 
     def _dith_reset(self):
         if self.dith:

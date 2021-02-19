@@ -10,3 +10,6 @@ if __name__ == '__main__':
 
     c = Converter(f, "pig", True, Converter.FLAG.CF_TRUE_COLOR_332)
     c.convert(Converter.FLAG.CF_TRUE_COLOR_332)
+    print(c.get_c_header())
+    print(c.get_c_footer(Converter.FLAG.CF_ALPHA_1_BIT))
+
