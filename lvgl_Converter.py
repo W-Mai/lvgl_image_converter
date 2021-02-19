@@ -1,6 +1,7 @@
 from typing import *
 
 from PIL import Image
+import struct
 
 
 def getColorFromPalette(palette, index):
@@ -229,7 +230,7 @@ class Converter(object):
 
         return c_array
 
-    def get_c_header(self) -> AnyStr:
+    def _get_c_header(self) -> AnyStr:
         c_header = r'''#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
 #else
@@ -247,7 +248,7 @@ class Converter(object):
 const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST {attr_name} uint8_t {self.out_name}_map[] = {{'''
         return c_header
 
-    def get_c_footer(self, cf) -> AnyStr:
+    def _get_c_footer(self, cf) -> AnyStr:
         c_footer = rf'''
 }}
 const lv_img_dsc_t {self.out_name} = {{
@@ -276,11 +277,35 @@ const lv_img_dsc_t {self.out_name} = {{
             }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}}\n"
         return c_footer
 
-    def download_c(self):
-        pass
+    def get_c_code_file(self, cf=-1, content="") -> AnyStr:
+        if len(content) < 1: content = self.format_to_c_array()
+        if cf < 0: cf = self.cf
+        out = self._get_c_header() + content + self._get_c_footer(cf)
+        return out
 
-    def download_bin(self):
-        pass
+    def get_bin_file(self, cf=-1, content=None) -> bytes:
+        if not content: content = self.d_out
+        if cf < 0: cf = self.cf
+
+        lv_cf = {  # Color format in LittlevGL
+            self.FLAG.CF_TRUE_COLOR: 4,
+            self.FLAG.CF_TRUE_COLOR_ALPHA: 5,
+            self.FLAG.CF_TRUE_COLOR_CHROMA: 6,
+            self.FLAG.CF_INDEXED_1_BIT: 7,
+            self.FLAG.CF_INDEXED_2_BIT: 8,
+            self.FLAG.CF_INDEXED_4_BIT: 9,
+            self.FLAG.CF_INDEXED_8_BIT: 10,
+            self.FLAG.CF_ALPHA_1_BIT: 11,
+            self.FLAG.CF_ALPHA_2_BIT: 12,
+            self.FLAG.CF_ALPHA_4_BIT: 13,
+            self.FLAG.CF_ALPHA_8_BIT: 14
+        }.get(cf, 4)
+
+        header = lv_cf + (self.w << 10) + (self.h << 21)
+        print(header)
+        header_bin = struct.pack("<L", header)
+        content = struct.pack(f"<{len(content)}B", *content)
+        return header_bin + content
 
     def _conv_px(self, x, y):
         c = self.img.getpixel((x, y))

@@ -32,9 +32,10 @@ if __name__ == '__main__':
 
     c = Converter(f, "pig", True, cf)
     c.convert(cf)
-    print(c.get_c_header())
-    print(c.format_to_c_array())
-    print(c.get_c_footer(cf))
+    print(c.get_c_code_file())
+    print(c.get_bin_file())
+    # print(c.format_to_c_array())
+    # print(c._get_c_footer(cf))
 
     # test_c_array1()
     test_c_array2()
