@@ -28,11 +28,13 @@ def test_c_array2():
 if __name__ == '__main__':
     f = r"E:\USERDATAS\Pictures\pig.png"
 
-    c = Converter(f, "pig", True, Converter.FLAG.CF_TRUE_COLOR_332)
-    c.convert(Converter.FLAG.CF_TRUE_COLOR_332)
+    cf = Converter.FLAG.CF_TRUE_COLOR_332
+
+    c = Converter(f, "pig", True, cf)
+    c.convert(cf)
     print(c.get_c_header())
-    # print(c.format_to_c_array())
-    print(c.get_c_footer(Converter.FLAG.CF_TRUE_COLOR_332))
+    print(c.format_to_c_array())
+    print(c.get_c_footer(cf))
 
     # test_c_array1()
     test_c_array2()

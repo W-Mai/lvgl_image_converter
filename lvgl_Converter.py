@@ -117,15 +117,15 @@ class Converter(object):
                 else:
                     self.d_out.extend([0xFF, 0xFF, 0xFF, 0xFF])
 
-            # Convert all the pixels
-            for y in range(self.h):
-                self._dith_reset()
-                for x in range(self.w):
-                    self._conv_px(x, y)
+        # Convert all the pixels
+        for y in range(self.h):
+            self._dith_reset()
+            for x in range(self.w):
+                self._conv_px(x, y)
 
-            # Revert the original image if it was converted to indexed
-            if palette_size:
-                self.img.paste(img_tmp)
+        # Revert the original image if it was converted to indexed
+        if palette_size:
+            self.img.paste(img_tmp)
 
     def format_to_c_array(self) -> AnyStr:
         c_array = ""
@@ -188,7 +188,6 @@ class Converter(object):
             i += 1
 
         for y in range(y_end):
-            c_array += "\n  "
             for x in range(x_end):
                 if self.cf == self.FLAG.CF_TRUE_COLOR_332:
                     append_and_increase()
@@ -213,12 +212,16 @@ class Converter(object):
                 elif self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
                     append_and_increase()
 
-        tmpStr = ''
         if self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
             tmpStr = ', \n'.join(
-                ', '.join(tmpArr[(x_end // 16) * x: (x_end // 16) * x + 16]) for x in range(x_end // 16))
+                ', '.join(
+                    tmpArr[(x_end // 16) * x: (x_end // 16) * x + 16]) for x in range(x_end // 16)
+            )
         else:
-            tmpStr = ', \n'.join(', '.join(tmpArr[y * x_end: (y + 1) * x_end]) for y in range(y_end))
+            tmpStr = ', \n'.join(
+                ', '.join(
+                    tmpArr[y * x_end: (y + 1) * x_end]) for y in range(y_end)
+            )
 
         if self.cf in (self.FLAG.CF_TRUE_COLOR_332, self.FLAG.CF_TRUE_COLOR_565, self.FLAG.CF_TRUE_COLOR_565_SWAP,
                        self.FLAG.CF_TRUE_COLOR_888):
@@ -280,7 +283,7 @@ const lv_img_dsc_t {self.out_name} = {{
         pass
 
     def _conv_px(self, x, y):
-        c = getColorFromPalette(self.img.getpalette(), self.img.getpixel((x, y)))
+        c = self.img.getpixel((x, y))
 
         a = c[3] if len(c) == 4 else 0xFF
         r, g, b = c[:3]
