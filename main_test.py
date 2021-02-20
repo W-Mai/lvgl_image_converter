@@ -28,12 +28,12 @@ def test_c_array2():
 if __name__ == '__main__':
     f = r"E:\USERDATAS\Pictures\pig.png"
 
-    cf = Converter.FLAG.CF_TRUE_COLOR_332
+    cf = Converter.FLAG.CF_INDEXED_1_BIT
 
     c = Converter(f, "pig", True, cf)
     c.convert(cf)
     print(c.get_c_code_file())
-    print(c.get_bin_file())
+    # print(c.get_bin_file())
     # print(c.format_to_c_array())
     # print(c._get_c_footer(cf))
 
