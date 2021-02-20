@@ -108,7 +108,7 @@ class Converter(object):
         self.d_out = []
         self.alpha = alpha
 
-        if self.cf == self.FLAG.CF_RAW or self.cf == self.FLAG.CF_RAW_ALPHA or self.cf == self.FLAG.CF_RAW_CHROMA:
+        if self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
             with open(self.path, "rb") as f:
                 self.d_out = f.read()
             return
