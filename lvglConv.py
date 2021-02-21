@@ -1,6 +1,7 @@
 import argparse
 import os
 from lvgl_Converter import Converter
+import time
 
 name2const = {
     'RGB332': Converter.FLAG.CF_TRUE_COLOR_332,
@@ -24,17 +25,20 @@ name2const = {
 }
 
 
+def CheckAllowed(filepath):
+    path_split = os.path.splitext(filepath)
+    suffix: str = path_split[-1]
+
+    return suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tga', '.gif', '.bin']
+
+
 def ConvOneFile(filepath, f, cf, ff: str, dith, out_path=''):
     path_split = os.path.split(filepath)
     root_path = path_split[0]
     name_split = os.path.splitext(path_split[-1])
     name = name_split[0]
-    suffix: str = name_split[-1]
-
-    if suffix.lower() not in ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tga', '.gif', '.bin']:
-        return False
-
     conv = Converter(filepath, name, dith, name2const[f])
+
     c_arr = ''
     if f in ['true_color', 'true_color_alpha', 'true_color_chroma']:
         conv.convert(name2const[cf])
@@ -53,9 +57,11 @@ def ConvOneFile(filepath, f, cf, ff: str, dith, out_path=''):
             'mode': 'wb'}
     }
 
-    with open(file_conf[ff][bool(out_path)], file_conf[ff]['mode'], encoding='utf-8') as fi:
-        fi.write(conv.get_c_code_file(name2const[f], c_arr) if ff == 'C' else conv.get_bin_file(name2const[f]))
-    return True
+    with open(file_conf[ff][bool(out_path)], file_conf[ff]['mode']) as fi:
+        res = conv.get_c_code_file(name2const[f], c_arr) if ff == 'C' else conv.get_bin_file(name2const[f])
+        fi.write(res)
+    return "SUCCESS"
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -95,6 +101,15 @@ if __name__ == '__main__':
                     break
                 for item in files:
                     abs_path = os.path.abspath(os.path.join(root, item))
-                    if ConvOneFile(abs_path, args.f, args.cf, args.ff, args.d, args.o):
+                    if not CheckAllowed(abs_path): continue
+                    print(f'{file_count:<5} {abs_path} START', end='')
+                    t0 = time.time()
+                    conv_rtn = ConvOneFile(abs_path, args.f, args.cf, args.ff, args.d, args.o)
+                    if conv_rtn == "SUCCESS":
                         file_count += 1
+                        print('\b' * 5 + 'FINISHED', end='')
+                    elif conv_rtn == "NOT ALLOWED":
+                        print('\b' * 5, end='')
+                    print(f' {(time.time() - t0)*1000} ms')
+    print()
     print(f"Convert Complete. Total convert {file_count} file(s).")

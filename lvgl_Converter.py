@@ -1,5 +1,5 @@
 from typing import *
-
+import math
 from PIL import Image
 import struct
 
@@ -125,7 +125,6 @@ class Converter(object):
             img_tmp.paste(img_tmp, self.img)
             self.img = self.img.convert(mode="P", colors=palette_size)
             real_palette_size = len(self.img.getcolors())  # The real number of colors in the image's palette
-            print(self.img.getcolors())
             real_palette = self.img.getpalette()
             self.img.show()
             for i in range(palette_size):
@@ -135,6 +134,7 @@ class Converter(object):
                     self.d_out.append(0xFF)
                 else:
                     self.d_out.extend([0xFF, 0xFF, 0xFF, 0xFF])
+
 
         # Convert all the pixels
         for y in range(self.h):
@@ -331,13 +331,13 @@ const lv_img_dsc_t {self.out_name} = {{
         }.get(cf, 4)
 
         header = lv_cf + (self.w << 10) + (self.h << 21)
-        print(header)
         header_bin = struct.pack("<L", header)
         content = struct.pack(f"<{len(content)}B", *content)
         return header_bin + content
 
     def _conv_px(self, x, y):
         c = self.img.getpixel((x, y))
+
         if self.img.mode == "P":
             c = getColorFromPalette(self.img.getpalette(), c)
 
@@ -510,9 +510,8 @@ const lv_img_dsc_t {self.out_name} = {{
             if self.g_act > 0xFF: self.g_act = 0xFF
             if self.b_act > 0xFF: self.b_act = 0xFF
 
-    @staticmethod
-    def _classify_pixel(value, bits):
-        import math
+    def _classify_pixel(self,value, bits):
+
         tmp = 1 << (8 - bits)
         val = math.ceil(value / tmp) * tmp
         return val if val >= 0 else 0
