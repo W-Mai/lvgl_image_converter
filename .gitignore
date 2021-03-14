@@ -6,3 +6,4 @@ dist
 build
 *.c
 *.bin
+venv
