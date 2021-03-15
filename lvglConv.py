@@ -94,6 +94,7 @@ if __name__ == '__main__':
     # Namespace(cf='RGB888', f='true_color', ff='C', filepath=['fuckme.jpg'], o='/')
 
     file_count = 0
+    failed_pic_paths = []
     for path in args.filepath:
         if os.path.isdir(path):
             for root, dirs, files in os.walk(path):
@@ -104,12 +105,21 @@ if __name__ == '__main__':
                     if not CheckAllowed(abs_path): continue
                     print(f'{file_count:<5} {abs_path} START', end='')
                     t0 = time.time()
-                    conv_rtn = ConvOneFile(abs_path, args.f, args.cf, args.ff, args.d, args.o)
-                    if conv_rtn == "SUCCESS":
-                        file_count += 1
-                        print('\b' * 5 + 'FINISHED', end='')
-                    elif conv_rtn == "NOT ALLOWED":
-                        print('\b' * 5, end='')
-                    print(f' {(time.time() - t0)*1000} ms')
+
+                    try:
+                        conv_rtn = ConvOneFile(abs_path, args.f, args.cf, args.ff, args.d, args.o)
+                        if conv_rtn == "SUCCESS":
+                            file_count += 1
+                            print('\b' * 5 + 'FINISHED', end='')
+                        elif conv_rtn == "NOT ALLOWED":
+                            print('\b' * 5, end='')
+                    except Exception as e:
+                        print('\b' * 5, e, end='')
+                        failed_pic_paths.append(abs_path)
+                    print(f' {(time.time() - t0) * 1000} ms')
     print()
     print(f"Convert Complete. Total convert {file_count} file(s).")
+    print()
+    print("Failed File List:")
+    for path in failed_pic_paths:
+        print(path)
