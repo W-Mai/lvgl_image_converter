@@ -2,12 +2,14 @@ import argparse
 import os
 import time
 
+Suffix = [".bin"]
+
 
 def CheckAllowed(filepath):
     path_split = os.path.splitext(filepath)
     suffix: str = path_split[-1]
 
-    return suffix.lower() in ['.bin']
+    return suffix.lower() in Suffix
 
 
 def ConvOneFile(filepath, target_name):
@@ -27,7 +29,12 @@ if __name__ == '__main__':
                         help='images dir paths (or file paths) you wanna convert')
     parser.add_argument('-o', '-output-filename', type=str,
                         help='output file name.')
+    parser.add_argument('-s', '-suffix', type=str, nargs="+",
+                        help='file suffix.')
     args = parser.parse_args()
+
+    if args.s:
+        Suffix = args.s
 
     file_count = 0
     for path in args.filepath:
