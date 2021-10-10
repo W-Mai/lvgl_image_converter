@@ -2,6 +2,7 @@ from typing import *
 import math
 from PIL import Image
 import struct
+import os.path
 
 
 def getColorFromPalette(palette, index):
@@ -56,7 +57,7 @@ class _const:
 class Converter(object):
     FLAG = _const()
 
-    def __init__(self, path, out_name: str, dith: bool, cf):
+    def __init__(self, path, dith: bool = True, cf=FLAG.CF_INDEXED_4_BIT):
 
         self.dith = None  # Dithering enable/disable
         self.w = None  # Image width
@@ -66,8 +67,7 @@ class Converter(object):
         self.chroma = None  # Chroma keyed?
         self.d_out = None  # Output data (result)
         self.img = None  # Image resource
-        self.out_name = None  # Name of the output file
-        self.path = None  # Path to the image file
+        self.out_name = os.path.basename(path).split(".")[0]  # Name of the output file
 
         # Helper variables
         self.r_act = 0
@@ -85,7 +85,6 @@ class Converter(object):
 
         self.cf = cf
         self.dith = dith
-        self.out_name = out_name
         self.path = path
 
         if cf == "raw" or cf == "raw_alpha" or cf == "raw_chroma":
@@ -310,6 +309,11 @@ const lv_img_dsc_t {self.out_name} = {{
         if len(content) < 1: content = self.format_to_c_array()
         if cf < 0: cf = self.cf
         out = self._get_c_header() + content + self._get_c_footer(cf)
+
+        with open(os.path.splitext(self.path)[0] + ".h", "w", encoding='utf-8') as f:
+            f.write(str(out))
+            f.close()
+
         return out
 
     def get_bin_file(self, cf=-1, content=None) -> bytes:
@@ -333,6 +337,11 @@ const lv_img_dsc_t {self.out_name} = {{
         header = lv_cf + (self.w << 10) + (self.h << 21)
         header_bin = struct.pack("<L", header)
         content = struct.pack(f"<{len(content)}B", *content)
+
+        with open(os.path.splitext(self.path)[0]  + ".bin", "wb") as f:
+            f.write(header_bin + content)
+            f.close()
+
         return header_bin + content
 
     def _conv_px(self, x, y):

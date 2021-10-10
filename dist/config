@@ -1,0 +1,3 @@
+color_format    = CF_ALPHA_4_BIT
+out_c           = yes
+out_bin         = yes
