@@ -82,7 +82,7 @@ if __name__ == '__main__':
         c.convert(cf)
         print("saving...")
         if(out_bin == 1):
-            c.get_c_code_file() # get and save data to files
+            c.get_bin_file() # get and save data to files
         if(out_c == 1):
             c.get_c_code_file() # get and save data to files
         
