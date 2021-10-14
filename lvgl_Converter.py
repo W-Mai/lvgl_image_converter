@@ -57,7 +57,7 @@ class _const:
 class Converter(object):
     FLAG = _const()
 
-    def __init__(self, path, dith: bool = True, cf=FLAG.CF_INDEXED_4_BIT):
+    def __init__(self, path, dith: bool = True, cf=FLAG.CF_INDEXED_4_BIT, cf_palette_bgr_en = 0):
 
         self.dith = None  # Dithering enable/disable
         self.w = None  # Image width
@@ -86,6 +86,7 @@ class Converter(object):
         self.cf = cf
         self.dith = dith
         self.path = path
+        self.cf_palette_bgr_en = cf_palette_bgr_en
 
         if cf == "raw" or cf == "raw_alpha" or cf == "raw_chroma":
             return
@@ -102,8 +103,9 @@ class Converter(object):
         self.b_nerr = 0
 
     # noinspection PyAttributeOutsideInit
-    def convert(self, cf, alpha: int = 0) -> NoReturn:
-        self.cf = cf
+    def convert(self, cf = None, alpha: int = 0) -> NoReturn:
+        if cf is not None:
+            self.cf = cf
         self.d_out = []
         self.alpha = alpha
 
@@ -121,14 +123,16 @@ class Converter(object):
 
         if palette_size:
             img_tmp = Image.new("RGB", (self.w, self.h))
-            img_tmp.paste(img_tmp, self.img)
+            img_tmp.paste(img_tmp, self.img.size)
             self.img = self.img.convert(mode="P", colors=palette_size)
             real_palette_size = len(self.img.getcolors())  # The real number of colors in the image's palette
             real_palette = self.img.getpalette()
-            self.img.show()
+            # self.img.show()
             for i in range(palette_size):
                 if i < real_palette_size:
                     c = getColorFromPalette(real_palette, i)
+                    if ( self.cf_palette_bgr_en == 1):
+                        c = [c[2 - i] for i in range(3)]
                     self.d_out.extend(c)
                     self.d_out.append(0xFF)
                 else:

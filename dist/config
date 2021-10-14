@@ -1,3 +1,11 @@
+<<<<<<< HEAD
 color_format    = CF_ALPHA_4_BIT
 out_c           = yes
 out_bin         = yes
+=======
+color_format    = CF_INDEXED_4_BIT
+out_c           = yes
+out_bin         = yes
+path            = images
+cf_palette_bgr_en = yes
+>>>>>>> d1f6116 (lvgl使用的调色盘中用的是BGR编码，增加INDEXED格式输出时的配置选项。遗留bug，部分图标背景色填充为0xff)
