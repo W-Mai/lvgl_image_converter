@@ -1,3 +1,16 @@
+# Copyright (c) 2021 W-Mai
+# 
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+#
+# lvgl_image_converter/lvgl_Converter.py
+# Created by W-Mai on 2021/2/17.
+# repo: https://github.com/W-Mai/lvgl_image_converter
+#
+##############################################################
+
+
+
 from typing import *
 import math
 from PIL import Image
