@@ -306,7 +306,7 @@ const lv_img_dsc_t {self.out_name} = {{
                 self.FLAG.CF_RAW: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW,",
                 self.FLAG.CF_RAW_ALPHA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_ALPHA,",
                 self.FLAG.CF_RAW_CHROMA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_CHROMA_KEYED,"
-            }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}}\n"
+            }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}};\n"
         return c_footer
 
     def get_c_code_file(self, cf=-1, content="") -> AnyStr:
