@@ -46,6 +46,7 @@ if __name__ == '__main__':
     #     time.sleep(3)
     #     sys.exit(0)
     cf = Converter.FLAG.CF_ALPHA_2_BIT
+    cf_palette_bgr_en = 0
     out_c = 0
     out_bin = 0
     path = "images"
@@ -62,8 +63,10 @@ if __name__ == '__main__':
             out_c = cfg_en[value]
         if (name == "out_bin"):
             out_bin = cfg_en[value]
-        if (path == "path"):
+        if (name == "path"):
             out_bin = value
+        if (name == "cf_palette_bgr_en"):
+            cf_palette_bgr_en = cfg_en[value]
     f.close()
 
     print("\n")
@@ -72,6 +75,7 @@ if __name__ == '__main__':
     print("out_c=" + str(out_c))
     print("out_bin=" + str(out_bin))
     print("path=" + path)
+    print("cf_palette_bgr_en=" + str(cf_palette_bgr_en))
     print("\n")
     
     print("===========================================================")
@@ -90,11 +94,11 @@ if __name__ == '__main__':
 
         print(file_path)
         print("converting...")
-        c = Converter(path=file_path, dith=True, cf=cf)
-        c.convert(cf)
+        c = Converter(path=file_path, dith=True, cf=cf, cf_palette_bgr_en=cf_palette_bgr_en)
+        c.convert()
         print("saving...")
         if(out_bin == 1):
-            c.get_c_code_file() # get and save data to files
+            c.get_bin_file() # get and save data to files
         if(out_c == 1):
             c.get_c_code_file() # get and save data to files
         

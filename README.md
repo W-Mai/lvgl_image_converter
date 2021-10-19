@@ -59,9 +59,9 @@ cfg_en = {
 ## 打包可执行文件
 
 ```
-pip instsall pyinstall
+pip instsall pyinstaller
 ```
 
 ```
-pyinstall -F -n lvgl_image_converter.exe main.py
+pyinstaller -F -n lvgl_image_converter.exe main.py
 ```
