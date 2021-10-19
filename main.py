@@ -1,3 +1,15 @@
+# Copyright (c) 2021 W-Mai
+# 
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+#
+# lvgl_image_converter/main.py
+# Created by W-Mai on 2021/2/17.
+# repo: https://github.com/W-Mai/lvgl_image_converter
+#
+##############################################################
+
+
 import os.path, sys, time
 from lvgl_Converter import Converter
 import msvcrt
