@@ -1,5 +1,0 @@
-color_format    = CF_INDEXED_4_BIT
-out_c           = yes
-out_bin         = yes
-path            = images
-cf_palette_bgr_en = yes
