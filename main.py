@@ -56,16 +56,16 @@ if __name__ == '__main__':
     print(cf_data)
     cf_data = cf_data.replace(" ", "")
     for data in cf_data.split():
-        name,value = data.split('=')
-        if (name == "color_format"):
+        name, value = data.split('=')
+        if name == "color_format":
             cf = color_format_dir[value]
-        if (name == "out_c"):
+        if name == "out_c":
             out_c = cfg_en[value]
-        if (name == "out_bin"):
+        if name == "out_bin":
             out_bin = cfg_en[value]
-        if (name == "path"):
+        if name == "path":
             out_bin = value
-        if (name == "cf_palette_bgr_en"):
+        if name == "cf_palette_bgr_en":
             cf_palette_bgr_en = cfg_en[value]
     f.close()
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     print("path=" + path)
     print("cf_palette_bgr_en=" + str(cf_palette_bgr_en))
     print("\n")
-    
+
     print("===========================================================")
     cnt = 1
     for file in os.listdir(path):
@@ -86,10 +86,10 @@ if __name__ == '__main__':
         if os.path.isdir(file_path):
             continue
 
-        if os.path.splitext(file_path)[1]== '.c' \
-            or os.path.splitext(file_path)[1]== '.bin' \
-            or os.path.splitext(file_path)[1]== '.h' \
-            or file == '.gitignore' :
+        if os.path.splitext(file_path)[1] == '.c' \
+                or os.path.splitext(file_path)[1] == '.bin' \
+                or os.path.splitext(file_path)[1] == '.h' \
+                or file == '.gitignore':
             continue
 
         print(file_path)
@@ -97,15 +97,13 @@ if __name__ == '__main__':
         c = Converter(path=file_path, dith=True, cf=cf, cf_palette_bgr_en=cf_palette_bgr_en)
         c.convert()
         print("saving...")
-        if(out_bin == 1):
-            c.get_bin_file() # get and save data to files
-        if(out_c == 1):
-            c.get_c_code_file() # get and save data to files
-        
+        if out_bin == 1:
+            c.get_bin_file()  # get and save data to files
+        if out_c == 1:
+            c.get_c_code_file()  # get and save data to files
+
         print("file {} done\n".format(cnt))
         cnt = cnt + 1
-    
+
     print("\nPlease input anything to exit")
     msvcrt.getch()
-
-
