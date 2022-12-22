@@ -49,7 +49,7 @@ def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
     if len(root_path.parts) > 0:
         rel_path = root_path.relative_to(root_path.parts[0])
     name = filepath.stem
-    conv = Converter(filepath.as_posix(), dither, name2const[f])
+    conv = Converter(filepath.as_posix(), name, dither, name2const[f])
 
     c_arr = ''
     if f in ['true_color', 'true_color_alpha', 'true_color_chroma']:

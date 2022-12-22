@@ -11,6 +11,7 @@
 
 
 import os.path, sys, time
+from pathlib import Path
 from lv_img_converter import Converter
 import msvcrt
 
@@ -94,7 +95,8 @@ if __name__ == '__main__':
 
         print(file_path)
         print("converting...")
-        c = Converter(path=file_path, dither=True, cf=cf, cf_palette_bgr_en=cf_palette_bgr_en)
+        c = Converter(path=file_path, out_name=Path(file_path).stem, dither=True, cf=cf,
+                      cf_palette_bgr_en=cf_palette_bgr_en)
         c.convert()
         print("saving...")
         if out_bin == 1:
