@@ -3,7 +3,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# lvgl_image_converter/lvgl_Converter.py
+# lvgl_image_converter/lv_img_converter/lv_img_converter.py
 # Created by W-Mai on 2021/2/17.
 # repo: https://github.com/W-Mai/lvgl_image_converter
 #

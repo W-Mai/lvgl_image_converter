@@ -3,7 +3,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# lvgl_image_converter/main.py
+# lvgl_image_converter/lv_img_conv_win_spec/main.py
 # Created by W-Mai on 2021/2/17.
 # repo: https://github.com/W-Mai/lvgl_image_converter
 #
@@ -11,7 +11,7 @@
 
 
 import os.path, sys, time
-from lvgl_Converter import Converter
+from lv_img_converter import Converter
 import msvcrt
 
 color_format_dir = {
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     cf_palette_bgr_en = 0
     out_c = 0
     out_bin = 0
-    path = "images"
+    path = "../images"
 
     f = open("config", 'r+')
     cf_data = f.read()

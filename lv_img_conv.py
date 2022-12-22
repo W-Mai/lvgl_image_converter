@@ -3,7 +3,7 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
-# lvgl_image_converter/lvglConv.py
+# lvgl_image_converter/lv_img_conv.py
 # Created by W-Mai on 2021/2/21.
 # repo: https://github.com/W-Mai/lvgl_image_converter
 #
@@ -12,7 +12,7 @@
 
 import argparse
 import os
-from lvgl_Converter import Converter
+from lv_img_converter import Converter
 import time
 
 name2const = {
