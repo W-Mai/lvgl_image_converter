@@ -45,6 +45,9 @@ def check_allowed(filepath: Path):
 
 def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
     root_path = filepath.parent
+    rel_path = Path()
+    if len(root_path.parts) > 0:
+        rel_path = root_path.relative_to(root_path.parts[0])
     name = filepath.stem
     conv = Converter(filepath.as_posix(), dither, name2const[f])
 
@@ -65,6 +68,8 @@ def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
     }
 
     out_path = root_path if out_path == Path() else out_path
+    out_path = out_path.joinpath(rel_path)
+    out_path.mkdir(exist_ok=True)
     out_path = out_path.joinpath(name).with_suffix(file_conf[ff]['suffix'])
 
     with open(out_path, file_conf[ff]['mode']) as fi:
@@ -105,6 +110,9 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
+    output_path = Path(args.o)
+    output_path.mkdir(exist_ok=True)
+
     file_count = 0
     failed_pic_paths = []
     for path in args.filepath:
@@ -119,7 +127,7 @@ if __name__ == '__main__':
                 t0 = time.time()
 
                 try:
-                    conv_rtn = conv_one_file(file, args.f, args.cf, args.ff, args.d, Path(args.o))
+                    conv_rtn = conv_one_file(file, args.f, args.cf, args.ff, args.d, output_path)
                     if conv_rtn == "SUCCESS":
                         file_count += 1
                         print('\b' * 5 + 'FINISHED', end='')
