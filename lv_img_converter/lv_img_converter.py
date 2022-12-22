@@ -324,11 +324,6 @@ const lv_img_dsc_t {self.out_name} = {{
         if len(content) < 1: content = self.format_to_c_array()
         if cf < 0: cf = self.cf
         out = self._get_c_header() + content + self._get_c_footer(cf)
-
-        with open(os.path.splitext(self.path)[0] + ".h", "w", encoding='utf-8') as f:
-            f.write(str(out))
-            f.close()
-
         return out
 
     def get_bin_file(self, cf=-1, content=None) -> bytes:
@@ -352,11 +347,6 @@ const lv_img_dsc_t {self.out_name} = {{
         header = lv_cf + (self.w << 10) + (self.h << 21)
         header_bin = struct.pack("<L", header)
         content = struct.pack(f"<{len(content)}B", *content)
-
-        with open(os.path.splitext(self.path)[0] + ".bin", "wb") as f:
-            f.write(header_bin + content)
-            f.close()
-
         return header_bin + content
 
     def _conv_px(self, x, y):

@@ -59,12 +59,8 @@ def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
         conv.convert(name2const[f])
 
     file_conf = {
-        'C': {
-            'suffix': 'c',
-            'mode': 'w'},
-        'BIN': {
-            'suffix': '.bin',
-            'mode': 'wb'}
+        'C': {'suffix': '.c', 'mode': 'w'},
+        'BIN': {'suffix': '.bin', 'mode': 'wb'}
     }
 
     out_path = root_path if out_path == Path() else out_path
