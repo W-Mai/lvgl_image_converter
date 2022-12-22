@@ -73,7 +73,7 @@ def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
     return "SUCCESS"
 
 
-if __name__ == '__main__':
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepath', type=str, nargs="+",
                         help='images dir paths (or file paths) you wanna convert')
@@ -99,9 +99,11 @@ if __name__ == '__main__':
                         help='convert files recursively')
     parser.add_argument('-d', action="store_const", const=True,
                         help='need to dith')
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    # Namespace(cf='RGB888', f='true_color', ff='C', filepath=['fuckme.jpg'], o='/')
+
+if __name__ == '__main__':
+    args = parse_args()
 
     file_count = 0
     failed_pic_paths = []
