@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
         print(file_path)
         print("converting...")
-        c = Converter(path=file_path, dith=True, cf=cf, cf_palette_bgr_en=cf_palette_bgr_en)
+        c = Converter(path=file_path, dither=True, cf=cf, cf_palette_bgr_en=cf_palette_bgr_en)
         c.convert()
         print("saving...")
         if out_bin == 1:

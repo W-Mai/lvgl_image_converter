@@ -10,7 +10,6 @@
 ##############################################################
 
 
-
 from typing import *
 import math
 from PIL import Image
@@ -70,9 +69,9 @@ class _const:
 class Converter(object):
     FLAG = _const()
 
-    def __init__(self, path, dith: bool = True, cf=FLAG.CF_INDEXED_4_BIT, cf_palette_bgr_en = 0):
+    def __init__(self, path: str, dither: bool = True, cf=FLAG.CF_INDEXED_4_BIT, cf_palette_bgr_en=0):
 
-        self.dith = None  # Dithering enable/disable
+        self.dither = None  # Dithering enable/disable
         self.w = None  # Image width
         self.h = None  # Image height
         self.cf = None  # Color format
@@ -97,7 +96,7 @@ class Converter(object):
         self.b_nerr = None
 
         self.cf = cf
-        self.dith = dith
+        self.dither = dither
         self.path = path
         self.cf_palette_bgr_en = cf_palette_bgr_en
 
@@ -106,7 +105,7 @@ class Converter(object):
         self.img: Image.Image = Image.open(path)
         self.w, self.h = self.img.size
 
-        if self.dith:
+        if self.dither:
             self.r_earr = [0] * (self.w + 2)
             self.g_earr = [0] * (self.w + 2)
             self.b_earr = [0] * (self.w + 2)
@@ -116,7 +115,7 @@ class Converter(object):
         self.b_nerr = 0
 
     # noinspection PyAttributeOutsideInit
-    def convert(self, cf = None, alpha: int = 0) -> NoReturn:
+    def convert(self, cf=None, alpha: int = 0) -> NoReturn:
         if cf is not None:
             self.cf = cf
         self.d_out = []
@@ -144,13 +143,12 @@ class Converter(object):
             for i in range(palette_size):
                 if i < real_palette_size:
                     c = getColorFromPalette(real_palette, i)
-                    if ( self.cf_palette_bgr_en == 1):
+                    if self.cf_palette_bgr_en == 1:
                         c = [c[2 - i] for i in range(3)]
                     self.d_out.extend(c)
                     self.d_out.append(0xFF)
                 else:
                     self.d_out.extend([0xFF, 0xFF, 0xFF, 0xFF])
-
 
         # Convert all the pixels
         for y in range(self.h):
@@ -355,7 +353,7 @@ const lv_img_dsc_t {self.out_name} = {{
         header_bin = struct.pack("<L", header)
         content = struct.pack(f"<{len(content)}B", *content)
 
-        with open(os.path.splitext(self.path)[0]  + ".bin", "wb") as f:
+        with open(os.path.splitext(self.path)[0] + ".bin", "wb") as f:
             f.write(header_bin + content)
             f.close()
 
@@ -445,13 +443,13 @@ const lv_img_dsc_t {self.out_name} = {{
             forceUpdate(self.d_out, p, cx & 0xFF)
 
     def _dith_reset(self):
-        if self.dith:
+        if self.dither:
             self.r_nerr = 0
             self.g_nerr = 0
             self.b_nerr = 0
 
     def _dith_next(self, r, g, b, x):
-        if self.dith:
+        if self.dither:
             self.r_act = r + self.r_nerr + self.r_earr[x + 1]
             self.r_earr[x + 1] = 0
 
@@ -536,7 +534,7 @@ const lv_img_dsc_t {self.out_name} = {{
             if self.g_act > 0xFF: self.g_act = 0xFF
             if self.b_act > 0xFF: self.b_act = 0xFF
 
-    def _classify_pixel(self,value, bits):
+    def _classify_pixel(self, value, bits):
 
         tmp = 1 << (8 - bits)
         val = math.ceil(value / tmp) * tmp

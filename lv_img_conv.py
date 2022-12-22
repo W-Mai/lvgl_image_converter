@@ -11,9 +11,10 @@
 
 
 import argparse
-import os
-from lv_img_converter import Converter
 import time
+from pathlib import Path
+
+from lv_img_converter import Converter
 
 name2const = {
     'RGB332': Converter.FLAG.CF_TRUE_COLOR_332,
@@ -37,19 +38,15 @@ name2const = {
 }
 
 
-def check_allowed(filepath):
-    path_split = os.path.splitext(filepath)
-    suffix: str = path_split[-1]
-
+def check_allowed(filepath: Path):
+    suffix: str = filepath.suffix
     return suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tga', '.gif', '.bin']
 
 
-def conv_one_file(filepath, f, cf, ff: str, dither, out_path=''):
-    path_split = os.path.split(filepath)
-    root_path = path_split[0]
-    name_split = os.path.splitext(path_split[-1])
-    name = name_split[0]
-    conv = Converter(filepath, name, dither, name2const[f])
+def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
+    root_path = filepath.parent
+    name = filepath.stem
+    conv = Converter(filepath.as_posix(), dither, name2const[f])
 
     c_arr = ''
     if f in ['true_color', 'true_color_alpha', 'true_color_chroma']:
@@ -60,16 +57,17 @@ def conv_one_file(filepath, f, cf, ff: str, dither, out_path=''):
 
     file_conf = {
         'C': {
-            True: os.path.join(out_path, f"{name}.c"),
-            False: os.path.join(root_path, f"{name}.c"),
+            'suffix': 'c',
             'mode': 'w'},
         'BIN': {
-            True: os.path.join(out_path, f"{name}.bin"),
-            False: os.path.join(root_path, f"{name}.bin"),
+            'suffix': '.bin',
             'mode': 'wb'}
     }
 
-    with open(file_conf[ff][bool(out_path)], file_conf[ff]['mode']) as fi:
+    out_path = root_path if out_path == Path() else out_path
+    out_path = out_path.joinpath(name).with_suffix(file_conf[ff]['suffix'])
+
+    with open(out_path, file_conf[ff]['mode']) as fi:
         res = conv.get_c_code_file(name2const[f], c_arr) if ff == 'C' else conv.get_bin_file(name2const[f])
         fi.write(res)
     return "SUCCESS"
@@ -108,31 +106,30 @@ if __name__ == '__main__':
     file_count = 0
     failed_pic_paths = []
     for path in args.filepath:
-        if os.path.isdir(path):
-            for root, dirs, files in os.walk(path):
-                if not args.r and root != path:
-                    break
-                for item in files:
-                    abs_path = os.path.abspath(os.path.join(root, item))
-                    if not check_allowed(abs_path):
-                        continue
-                    print(f'{file_count:<5} {abs_path} START', end='')
-                    t0 = time.time()
+        path = Path(path)
+        if Path(path).is_dir():
+            path_glob = path.rglob if args.r else path.glob
+            for file in path_glob("*.*"):
+                file: Path
+                if not check_allowed(file):
+                    continue
+                print(f'{file_count:<5} {file} START', end='')
+                t0 = time.time()
 
-                    try:
-                        conv_rtn = conv_one_file(abs_path, args.f, args.cf, args.ff, args.d, args.o)
-                        if conv_rtn == "SUCCESS":
-                            file_count += 1
-                            print('\b' * 5 + 'FINISHED', end='')
-                        elif conv_rtn == "NOT ALLOWED":
-                            print('\b' * 5, end='')
-                    except Exception as e:
-                        print('\b' * 5, e, end='')
-                        failed_pic_paths.append(abs_path)
-                    print(f' {(time.time() - t0) * 1000} ms')
+                try:
+                    conv_rtn = conv_one_file(file, args.f, args.cf, args.ff, args.d, Path(args.o))
+                    if conv_rtn == "SUCCESS":
+                        file_count += 1
+                        print('\b' * 5 + 'FINISHED', end='')
+                    elif conv_rtn == "NOT ALLOWED":
+                        print('\b' * 5, end='')
+                except Exception as e:
+                    print('\b' * 5, e, end='')
+                    failed_pic_paths.append(file)
+                print(f' {(time.time() - t0) * 1000} ms')
     print()
     print(f"Convert Complete. Total convert {file_count} file(s).")
     print()
-    print("Failed File List:")
-    for path in failed_pic_paths:
-        print(path)
+    if failed_pic_paths:
+        print("Failed File List:")
+        print(*failed_pic_paths, sep='\n')
