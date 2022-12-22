@@ -37,19 +37,19 @@ name2const = {
 }
 
 
-def CheckAllowed(filepath):
+def check_allowed(filepath):
     path_split = os.path.splitext(filepath)
     suffix: str = path_split[-1]
 
     return suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tga', '.gif', '.bin']
 
 
-def ConvOneFile(filepath, f, cf, ff: str, dith, out_path=''):
+def conv_one_file(filepath, f, cf, ff: str, dither, out_path=''):
     path_split = os.path.split(filepath)
     root_path = path_split[0]
     name_split = os.path.splitext(path_split[-1])
     name = name_split[0]
-    conv = Converter(filepath, name, dith, name2const[f])
+    conv = Converter(filepath, name, dither, name2const[f])
 
     c_arr = ''
     if f in ['true_color', 'true_color_alpha', 'true_color_chroma']:
@@ -114,12 +114,13 @@ if __name__ == '__main__':
                     break
                 for item in files:
                     abs_path = os.path.abspath(os.path.join(root, item))
-                    if not CheckAllowed(abs_path): continue
+                    if not check_allowed(abs_path):
+                        continue
                     print(f'{file_count:<5} {abs_path} START', end='')
                     t0 = time.time()
 
                     try:
-                        conv_rtn = ConvOneFile(abs_path, args.f, args.cf, args.ff, args.d, args.o)
+                        conv_rtn = conv_one_file(abs_path, args.f, args.cf, args.ff, args.d, args.o)
                         if conv_rtn == "SUCCESS":
                             file_count += 1
                             print('\b' * 5 + 'FINISHED', end='')
