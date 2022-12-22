@@ -100,7 +100,7 @@ class Converter(object):
         self.dither = dither
         self.cf_palette_bgr_en = cf_palette_bgr_en
 
-        if cf == "raw" or cf == "raw_alpha" or cf == "raw_chroma":
+        if cf in [self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA]:
             return
         self.img: Image.Image = Image.open(path)
         self.w, self.h = self.img.size
