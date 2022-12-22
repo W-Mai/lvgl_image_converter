@@ -45,3 +45,9 @@ Recursively convert pictures in the `images` directory with flags
 ```shell
 python3 lv_img_conv.py -f true_color_alpha -cf RGB888 -ff BIN -o test -r ./images
 ```
+
+## Windows special version
+
+> 内容参考了peng-zhihui在[HoloCubic](https://github.com/peng-zhihui/HoloCubic)中对原作者工程的修改
+
+For more details, please see the [`./lv_img_conv_win_spec`](./lv_img_conv_win_spec) directory. 
