@@ -103,39 +103,52 @@ def parse_args():
     return parser.parse_args()
 
 
+class Main(object):
+    def __init__(self, args: argparse.Namespace):
+        self.args = args
+
+        self.output_path = Path(args.o)
+        self.output_path.mkdir(exist_ok=True)
+
+        self.file_count = 0
+        self.failed_pic_paths = []
+
+    def _convert_one(self, file):
+        print(f'{self.file_count:<5} {file} START', end='')
+        t0 = time.time()
+        try:
+            conv_rtn = conv_one_file(file, self.args.f, self.args.cf, self.args.ff, self.args.d,
+                                     self.output_path)
+            if conv_rtn == "SUCCESS":
+                self.file_count += 1
+                print('\b' * 5 + 'FINISHED', end='')
+            elif conv_rtn == "NOT ALLOWED":
+                print('\b' * 5, end='')
+        except Exception as e:
+            print('\b' * 5, e, end='')
+            self.failed_pic_paths.append(file)
+        print(f' {(time.time() - t0) * 1000} ms')
+
+    def convert(self):
+        for path in self.args.filepath:
+            path = Path(path)
+            if path.is_dir():
+                path_glob = path.rglob if self.args.r else path.glob
+                for file in path_glob("*.*"):
+                    file: Path
+                    if not check_allowed(file):
+                        continue
+                    self._convert_one(file=file)
+            elif path.is_file():
+                self._convert_one(file=path)
+        print()
+        print(f"Convert Complete. Total convert {self.file_count} file(s).")
+        print()
+        if self.failed_pic_paths:
+            print("Failed File List:")
+            print(*self.failed_pic_paths, sep='\n')
+
+
 if __name__ == '__main__':
-    args = parse_args()
-
-    output_path = Path(args.o)
-    output_path.mkdir(exist_ok=True)
-
-    file_count = 0
-    failed_pic_paths = []
-    for path in args.filepath:
-        path = Path(path)
-        if Path(path).is_dir():
-            path_glob = path.rglob if args.r else path.glob
-            for file in path_glob("*.*"):
-                file: Path
-                if not check_allowed(file):
-                    continue
-                print(f'{file_count:<5} {file} START', end='')
-                t0 = time.time()
-
-                try:
-                    conv_rtn = conv_one_file(file, args.f, args.cf, args.ff, args.d, output_path)
-                    if conv_rtn == "SUCCESS":
-                        file_count += 1
-                        print('\b' * 5 + 'FINISHED', end='')
-                    elif conv_rtn == "NOT ALLOWED":
-                        print('\b' * 5, end='')
-                except Exception as e:
-                    print('\b' * 5, e, end='')
-                    failed_pic_paths.append(file)
-                print(f' {(time.time() - t0) * 1000} ms')
-    print()
-    print(f"Convert Complete. Total convert {file_count} file(s).")
-    print()
-    if failed_pic_paths:
-        print("Failed File List:")
-        print(*failed_pic_paths, sep='\n')
+    main = Main(parse_args())
+    main.convert()
