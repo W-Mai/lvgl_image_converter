@@ -43,11 +43,11 @@ def check_allowed(filepath: Path):
     return suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tga', '.gif', '.bin']
 
 
-def conv_one_file(filepath: Path, f, cf, ff: str, dither, out_path=Path()):
+def conv_one_file(root: Path, filepath: Path, f, cf, ff: str, dither, out_path=Path()):
     root_path = filepath.parent
     rel_path = Path()
     if len(root_path.parts) > 0:
-        rel_path = root_path.relative_to(root_path.parts[0])
+        rel_path = root_path.relative_to(root)
     name = filepath.stem
     conv = Converter(filepath.as_posix(), name, dither, name2const[f])
 
@@ -113,12 +113,11 @@ class Main(object):
         self.file_count = 0
         self.failed_pic_paths = []
 
-    def _convert_one(self, file):
+    def _convert_one(self, root, file):
         print(f'{self.file_count:<5} {file} START', end='')
         t0 = time.time()
         try:
-            conv_rtn = conv_one_file(file, self.args.f, self.args.cf, self.args.ff, self.args.d,
-                                     self.output_path)
+            conv_rtn = conv_one_file(root, file, self.args.f, self.args.cf, self.args.ff, self.args.d, self.output_path)
             if conv_rtn == "SUCCESS":
                 self.file_count += 1
                 print('\b' * 5 + 'FINISHED', end='')
@@ -138,9 +137,9 @@ class Main(object):
                     file: Path
                     if not check_allowed(file):
                         continue
-                    self._convert_one(file=file)
+                    self._convert_one(root=path, file=file)
             elif path.is_file():
-                self._convert_one(file=path)
+                self._convert_one(root=path.parent, file=path)
         print()
         print(f"Convert Complete. Total convert {self.file_count} file(s).")
         print()
