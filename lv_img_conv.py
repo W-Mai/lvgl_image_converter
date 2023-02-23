@@ -14,7 +14,13 @@ import argparse
 import time
 from pathlib import Path
 
-from lv_img_converter import Converter
+try:
+    from lv_img_converter import Converter
+except ImportError:
+    print("""Please install Requirements by using `pip install -r requirements.txt`
+Read README.md for more details.
+          """)
+    exit(-1)
 
 name2const = {
     'RGB332': Converter.FLAG.CF_TRUE_COLOR_332,
