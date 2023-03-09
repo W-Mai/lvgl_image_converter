@@ -251,7 +251,13 @@ class Converter(object):
             self.FLAG.CF_ALPHA_2_BIT: 4,
             self.FLAG.CF_INDEXED_2_BIT: 4,
             self.FLAG.CF_ALPHA_4_BIT: 2,
-            self.FLAG.CF_INDEXED_4_BIT: 2
+            self.FLAG.CF_INDEXED_4_BIT: 2,
+        }.get(self.cf, 1)
+
+        x_end = x_end * {
+            self.FLAG.CF_TRUE_COLOR_565: 2,
+            self.FLAG.CF_TRUE_COLOR_565_SWAP: 2,
+            self.FLAG.CF_TRUE_COLOR_888: 4
         }.get(self.cf, 1)
 
         if self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
