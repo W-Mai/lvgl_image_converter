@@ -1,5 +1,5 @@
 # Copyright (c) 2021 W-Mai
-# 
+#
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 #
@@ -40,7 +40,8 @@ def force_update(li: List, index: int, elem: Any):
 
 
 class _CONST:
-    class ConstError(TypeError): pass
+    class ConstError(TypeError):
+        pass
 
     CF_TRUE_COLOR_332 = 0  # Helper formats. Used internally
     CF_TRUE_COLOR_565 = 1
@@ -69,8 +70,14 @@ class _CONST:
 class Converter(object):
     FLAG = _CONST()
 
-    def __init__(self, path: str, out_name: str, dither: bool = True, cf=FLAG.CF_INDEXED_4_BIT, cf_palette_bgr_en=0):
-
+    def __init__(
+        self,
+        path: str,
+        out_name: str,
+        dither: bool = True,
+        cf=FLAG.CF_INDEXED_4_BIT,
+        cf_palette_bgr_en=0,
+    ):
         self.dither = None  # Dithering enable/disable
         self.w = None  # Image width
         self.h = None  # Image height
@@ -120,7 +127,11 @@ class Converter(object):
         self.d_out = []
         self.alpha = alpha
 
-        if self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
+        if self.cf in (
+            self.FLAG.CF_RAW,
+            self.FLAG.CF_RAW_ALPHA,
+            self.FLAG.CF_RAW_CHROMA,
+        ):
             with open(self.path, "rb") as f:
                 self.d_out = f.read()
             return
@@ -136,7 +147,9 @@ class Converter(object):
             img_tmp = Image.new("RGB", (self.w, self.h))
             img_tmp.paste(img_tmp, self.img.size)
             self.img = self.img.convert(mode="P", colors=palette_size)
-            real_palette_size = len(self.img.getcolors())  # The real number of colors in the image's palette
+            real_palette_size = len(
+                self.img.getcolors()
+            )  # The real number of colors in the image's palette
             real_palette = self.img.getpalette()
             # self.img.show()
             for i in range(palette_size):
@@ -166,50 +179,74 @@ class Converter(object):
 
         if self.cf == self.FLAG.CF_TRUE_COLOR_332:
             c_array += "\n#if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8"
-            c_array += "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit, Alpha 8 bit */" if self.alpha \
+            c_array += (
+                "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit, Alpha 8 bit */"
+                if self.alpha
                 else "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit*/"
+            )
         elif self.cf == self.FLAG.CF_TRUE_COLOR_565:
             c_array += "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP == 0"
-            c_array += "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit, Alpha 8 bit*/" if self.alpha \
+            c_array += (
+                "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit, Alpha 8 bit*/"
+                if self.alpha
                 else "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit*/"
+            )
         elif self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
             c_array += "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP != 0"
-            c_array += "\n  /*Pixel format:  Blue: 5 bit Green: 6 bit, Red: 5 bit, Alpha 8 bit  BUT the 2  color " \
-                       "bytes are swapped*/" if self.alpha \
+            c_array += (
+                "\n  /*Pixel format:  Blue: 5 bit Green: 6 bit, Red: 5 bit, Alpha 8 bit  BUT the 2  color "
+                "bytes are swapped*/"
+                if self.alpha
                 else "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit BUT the 2 bytes are swapped*/"
+            )
         elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
             c_array += "\n#if LV_COLOR_DEPTH == 32"
-            c_array += "\n  /*Pixel format: Blue: 8 bit, Green: 8 bit, Red: 8 bit, Fix 0xFF: 8 bit, */" if self.alpha \
+            c_array += (
+                "\n  /*Pixel format: Blue: 8 bit, Green: 8 bit, Red: 8 bit, Fix 0xFF: 8 bit, */"
+                if self.alpha
                 else "\n  /*Pixel format:  Blue: 8 bit, Green: 8 bit, Red: 8 bit, Alpha: 8 bit*/"
+            )
         elif self.cf == self.FLAG.CF_INDEXED_1_BIT:
             c_array += "\n  "
             for p in range(2):
-                tmp_str = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmp_str = ", ".join(
+                    [f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)]
+                )
                 tmp_str = ", ".join([tmp_str, f"\t/*Color of index {p}*/\n  "])
                 c_array += tmp_str
             i = 2 * 4
         elif self.cf == self.FLAG.CF_INDEXED_2_BIT:
             c_array += "\n  "
             for p in range(4):
-                tmp_str = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmp_str = ", ".join(
+                    [f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)]
+                )
                 tmp_str = ", ".join([tmp_str, f"\t/*Color of index {p}*/\n  "])
                 c_array += tmp_str
             i = 4 * 4
         elif self.cf == self.FLAG.CF_INDEXED_4_BIT:
             c_array += "\n  "
             for p in range(16):
-                tmp_str = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmp_str = ", ".join(
+                    [f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)]
+                )
                 tmp_str = ", ".join([tmp_str, f"\t/*Color of index {p}*/\n  "])
                 c_array += tmp_str
             i = 16 * 4
         elif self.cf == self.FLAG.CF_INDEXED_8_BIT:
             c_array += "\n  "
             for p in range(256):
-                tmp_str = ", ".join([f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)])
+                tmp_str = ", ".join(
+                    [f"0x{self.d_out[p * 4 + s]:02X}" for s in range(4)]
+                )
                 tmp_str = ", ".join([tmp_str, f"\t/*Color of index {p}*/\n  "])
                 c_array += tmp_str
             i = 256 * 4
-        elif self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
+        elif self.cf in (
+            self.FLAG.CF_RAW,
+            self.FLAG.CF_RAW_ALPHA,
+            self.FLAG.CF_RAW_CHROMA,
+        ):
             y_end, x_end = 1, len(self.d_out)
             i = 1
 
@@ -224,25 +261,37 @@ class Converter(object):
             for x in range(x_end):
                 if self.cf == self.FLAG.CF_TRUE_COLOR_332:
                     append_and_increase()
-                    if self.alpha: append_and_increase()
-                elif self.cf in (self.FLAG.CF_TRUE_COLOR_565, self.FLAG.CF_TRUE_COLOR_565_SWAP):
+                    if self.alpha:
+                        append_and_increase()
+                elif self.cf in (
+                    self.FLAG.CF_TRUE_COLOR_565,
+                    self.FLAG.CF_TRUE_COLOR_565_SWAP,
+                ):
                     append_and_increase()
                     append_and_increase()
-                    if self.alpha: append_and_increase()
+                    if self.alpha:
+                        append_and_increase()
                 elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
                     append_and_increase()
                     append_and_increase()
                     append_and_increase()
                     append_and_increase()
                 elif self.cf in (self.FLAG.CF_ALPHA_1_BIT, self.FLAG.CF_INDEXED_1_BIT):
-                    if x & 0x7 == 0: append_and_increase()
+                    if x & 0x7 == 0:
+                        append_and_increase()
                 elif self.cf in (self.FLAG.CF_ALPHA_2_BIT, self.FLAG.CF_INDEXED_2_BIT):
-                    if x & 0x3 == 0: append_and_increase()
+                    if x & 0x3 == 0:
+                        append_and_increase()
                 elif self.cf in (self.FLAG.CF_ALPHA_4_BIT, self.FLAG.CF_INDEXED_4_BIT):
-                    if x & 0x1 == 0: append_and_increase()
+                    if x & 0x1 == 0:
+                        append_and_increase()
                 elif self.cf in (self.FLAG.CF_ALPHA_8_BIT, self.FLAG.CF_INDEXED_8_BIT):
                     append_and_increase()
-                elif self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
+                elif self.cf in (
+                    self.FLAG.CF_RAW,
+                    self.FLAG.CF_RAW_ALPHA,
+                    self.FLAG.CF_RAW_CHROMA,
+                ):
                     append_and_increase()
 
         x_end = x_end // {
@@ -257,29 +306,36 @@ class Converter(object):
         x_end = x_end * {
             self.FLAG.CF_TRUE_COLOR_565: 3 if self.alpha else 2,
             self.FLAG.CF_TRUE_COLOR_565_SWAP: 3 if self.alpha else 2,
-            self.FLAG.CF_TRUE_COLOR_888: 4
+            self.FLAG.CF_TRUE_COLOR_888: 4,
         }.get(self.cf, 1)
 
-        if self.cf in (self.FLAG.CF_RAW, self.FLAG.CF_RAW_ALPHA, self.FLAG.CF_RAW_CHROMA):
-            tmp_str = '\n  ' + ', \n  '.join(
-                ', '.join(
-                    tmp_arr[(x_end // 16) * x: (x_end // 16) * x + 16]) for x in range(x_end // 16)
+        if self.cf in (
+            self.FLAG.CF_RAW,
+            self.FLAG.CF_RAW_ALPHA,
+            self.FLAG.CF_RAW_CHROMA,
+        ):
+            tmp_str = "\n  " + ", \n  ".join(
+                ", ".join(tmp_arr[(x_end // 16) * x : (x_end // 16) * x + 16])
+                for x in range(x_end // 16)
             )
         else:
-            tmp_str = '\n  ' + ', \n  '.join(
-                ', '.join(
-                    tmp_arr[y * x_end: (y + 1) * x_end]) for y in range(y_end)
+            tmp_str = "\n  " + ", \n  ".join(
+                ", ".join(tmp_arr[y * x_end : (y + 1) * x_end]) for y in range(y_end)
             )
 
         c_array += tmp_str
-        if self.cf in (self.FLAG.CF_TRUE_COLOR_332, self.FLAG.CF_TRUE_COLOR_565, self.FLAG.CF_TRUE_COLOR_565_SWAP,
-                       self.FLAG.CF_TRUE_COLOR_888):
+        if self.cf in (
+            self.FLAG.CF_TRUE_COLOR_332,
+            self.FLAG.CF_TRUE_COLOR_565,
+            self.FLAG.CF_TRUE_COLOR_565_SWAP,
+            self.FLAG.CF_TRUE_COLOR_888,
+        ):
             c_array = c_array + "\n#endif"
 
         return c_array
 
     def _get_c_header(self) -> AnyStr:
-        c_header = r'''#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+        c_header = r"""#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
 #else
 #include "../lvgl/lvgl.h"
@@ -287,55 +343,58 @@ class Converter(object):
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
-'''
+"""
         attr_name = "LV_ATTRIBUTE_IMG_" + self.out_name.upper()
-        c_header = rf'''{c_header}
+        c_header = rf"""{c_header}
 #ifndef {attr_name}
 #define {attr_name}
 #endif
-const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST {attr_name} uint8_t {self.out_name}_map[] = {{'''
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST {attr_name} uint8_t {self.out_name}_map[] = {{"""
         return c_header
 
     def _get_c_footer(self, cf) -> AnyStr:
-        c_footer = rf'''
+        c_footer = rf"""
 }};
 
 const lv_img_dsc_t {self.out_name} = {{
   .header.always_zero = 0,
   .header.w = {self.w},
   .header.h = {self.h},
-  .data_size = '''
-        c_footer += \
-            {
-                self.FLAG.CF_TRUE_COLOR: f"{self.w * self.h} * LV_COLOR_SIZE / 8,\n  "
-                                         f".header.cf = LV_IMG_CF_TRUE_COLOR,",
-                self.FLAG.CF_TRUE_COLOR_ALPHA: f"{self.w * self.h} * LV_IMG_PX_SIZE_ALPHA_BYTE,\n  .header.cf = "
-                                               f"LV_IMG_CF_TRUE_COLOR_ALPHA,",
-                self.FLAG.CF_TRUE_COLOR_CHROMA: f"{self.w * self.h} * LV_COLOR_SIZE / 8,\n  .header.cf = "
-                                                f"LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED,",
-                self.FLAG.CF_ALPHA_1_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_1BIT,",
-                self.FLAG.CF_ALPHA_2_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_2BIT,",
-                self.FLAG.CF_ALPHA_4_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_4BIT,",
-                self.FLAG.CF_ALPHA_8_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_8BIT,",
-                self.FLAG.CF_INDEXED_1_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_1BIT,",
-                self.FLAG.CF_INDEXED_2_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_2BIT,",
-                self.FLAG.CF_INDEXED_4_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_4BIT,",
-                self.FLAG.CF_INDEXED_8_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_8BIT,",
-                self.FLAG.CF_RAW: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW,",
-                self.FLAG.CF_RAW_ALPHA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_ALPHA,",
-                self.FLAG.CF_RAW_CHROMA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_CHROMA_KEYED,"
-            }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}};\n"
+  .data_size = """
+        c_footer += {
+            self.FLAG.CF_TRUE_COLOR: f"{self.w * self.h} * LV_COLOR_SIZE / 8,\n  "
+            f".header.cf = LV_IMG_CF_TRUE_COLOR,",
+            self.FLAG.CF_TRUE_COLOR_ALPHA: f"{self.w * self.h} * LV_IMG_PX_SIZE_ALPHA_BYTE,\n  .header.cf = "
+            f"LV_IMG_CF_TRUE_COLOR_ALPHA,",
+            self.FLAG.CF_TRUE_COLOR_CHROMA: f"{self.w * self.h} * LV_COLOR_SIZE / 8,\n  .header.cf = "
+            f"LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED,",
+            self.FLAG.CF_ALPHA_1_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_1BIT,",
+            self.FLAG.CF_ALPHA_2_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_2BIT,",
+            self.FLAG.CF_ALPHA_4_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_4BIT,",
+            self.FLAG.CF_ALPHA_8_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_ALPHA_8BIT,",
+            self.FLAG.CF_INDEXED_1_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_1BIT,",
+            self.FLAG.CF_INDEXED_2_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_2BIT,",
+            self.FLAG.CF_INDEXED_4_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_4BIT,",
+            self.FLAG.CF_INDEXED_8_BIT: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_INDEXED_8BIT,",
+            self.FLAG.CF_RAW: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW,",
+            self.FLAG.CF_RAW_ALPHA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_ALPHA,",
+            self.FLAG.CF_RAW_CHROMA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_CHROMA_KEYED,",
+        }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}};\n"
         return c_footer
 
     def get_c_code_file(self, cf=-1, content="") -> AnyStr:
-        if len(content) < 1: content = self.format_to_c_array()
-        if cf < 0: cf = self.cf
+        if len(content) < 1:
+            content = self.format_to_c_array()
+        if cf < 0:
+            cf = self.cf
         out = self._get_c_header() + content + self._get_c_footer(cf)
         return out
 
     def get_bin_file(self, cf=-1, content=None) -> bytes:
-        if not content: content = self.d_out
-        if cf < 0: cf = self.cf
+        if not content:
+            content = self.d_out
+        if cf < 0:
+            cf = self.cf
 
         lv_cf = {  # Color format in lvgl
             self.FLAG.CF_TRUE_COLOR: 4,
@@ -348,7 +407,7 @@ const lv_img_dsc_t {self.out_name} = {{
             self.FLAG.CF_ALPHA_1_BIT: 11,
             self.FLAG.CF_ALPHA_2_BIT: 12,
             self.FLAG.CF_ALPHA_4_BIT: 13,
-            self.FLAG.CF_ALPHA_8_BIT: 14
+            self.FLAG.CF_ALPHA_8_BIT: 14,
         }.get(cf, 4)
 
         header = lv_cf + (self.w << 10) + (self.h << 21)
@@ -370,17 +429,22 @@ const lv_img_dsc_t {self.out_name} = {{
         if self.cf == self.FLAG.CF_TRUE_COLOR_332:
             c8 = self.r_act | (self.g_act >> 3) | (self.b_act >> 6)  # RGB332
             self.d_out.append(c8)
-            if self.alpha: self.d_out.append(a)
+            if self.alpha:
+                self.d_out.append(a)
         elif self.cf == self.FLAG.CF_TRUE_COLOR_565:
             c16 = (self.r_act << 8) | (self.g_act << 3) | (self.b_act >> 3)  # RGB565
             self.d_out.append(c16 & 0xFF)
             self.d_out.append((c16 >> 8) & 0xFF)
-            if self.alpha: self.d_out.append(a)
+            if self.alpha:
+                self.d_out.append(a)
         elif self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
-            c16 = (self.r_act << 8) | (self.g_act << 3) | (self.b_act >> 3)  # RGB565 SWAP
+            c16 = (
+                (self.r_act << 8) | (self.g_act << 3) | (self.b_act >> 3)
+            )  # RGB565 SWAP
             self.d_out.append((c16 >> 8) & 0xFF)
             self.d_out.append(c16 & 0xFF)
-            if self.alpha: self.d_out.append(a)
+            if self.alpha:
+                self.d_out.append(a)
         elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
             self.d_out.append(self.b_act)
             self.d_out.append(self.g_act)
@@ -388,23 +452,30 @@ const lv_img_dsc_t {self.out_name} = {{
             self.d_out.append(a)
         elif self.cf == self.FLAG.CF_ALPHA_1_BIT:
             w = self.w >> 3
-            if self.w & 0x07: w += 1
+            if self.w & 0x07:
+                w += 1
             p = w * y + (x >> 3)
-            if not check_exist(self.d_out, p): force_update(self.d_out, p, 0)  # Clear the bits first
-            if a > 0x80: self.d_out[p] |= 1 << (7 - (x & 0x7))
+            if not check_exist(self.d_out, p):
+                force_update(self.d_out, p, 0)  # Clear the bits first
+            if a > 0x80:
+                self.d_out[p] |= 1 << (7 - (x & 0x7))
         elif self.cf == self.FLAG.CF_ALPHA_2_BIT:
             w = self.w >> 2
-            if self.w & 0x03: w += 1
+            if self.w & 0x03:
+                w += 1
             p = w * y + (x >> 2)
-            if not check_exist(self.d_out, p): force_update(self.d_out, p, 0)  # Clear the bits first
+            if not check_exist(self.d_out, p):
+                force_update(self.d_out, p, 0)  # Clear the bits first
             self.d_out[p] |= (a >> 6) << (6 - ((x & 0x3) * 2))
 
         elif self.cf == self.FLAG.CF_ALPHA_4_BIT:
             w = self.w >> 1
-            if self.w & 0x01: w += 1
+            if self.w & 0x01:
+                w += 1
 
             p = w * y + (x >> 1)
-            if not check_exist(self.d_out, p): force_update(self.d_out, p, 0)  # Clear the bits first
+            if not check_exist(self.d_out, p):
+                force_update(self.d_out, p, 0)  # Clear the bits first
             self.d_out[p] |= (a >> 4) << (4 - ((x & 0x1) * 4))
 
         elif self.cf == self.FLAG.CF_ALPHA_8_BIT:
@@ -413,26 +484,32 @@ const lv_img_dsc_t {self.out_name} = {{
 
         elif self.cf == self.FLAG.CF_INDEXED_1_BIT:
             w = self.w >> 3
-            if self.w & 0x07: w += 1
+            if self.w & 0x07:
+                w += 1
 
             p = w * y + (x >> 3) + 8  # +8 for the palette
-            if not check_exist(self.d_out, p): force_update(self.d_out, p, 0)  # Clear the bits first
+            if not check_exist(self.d_out, p):
+                force_update(self.d_out, p, 0)  # Clear the bits first
             self.d_out[p] |= (cx & 0x1) << (7 - (x & 0x7))
 
         elif self.cf == self.FLAG.CF_INDEXED_2_BIT:
             w = self.w >> 2
-            if self.w & 0x03: w += 1
+            if self.w & 0x03:
+                w += 1
 
             p = w * y + (x >> 2) + 16  # +16 for the palette
-            if not check_exist(self.d_out, p): force_update(self.d_out, p, 0)  # Clear the bits first
+            if not check_exist(self.d_out, p):
+                force_update(self.d_out, p, 0)  # Clear the bits first
             self.d_out[p] |= (cx & 0x3) << (6 - ((x & 0x3) * 2))
 
         elif self.cf == self.FLAG.CF_INDEXED_4_BIT:
             w = self.w >> 1
-            if self.w & 0x01: w += 1
+            if self.w & 0x01:
+                w += 1
 
             p = w * y + (x >> 1) + 64  # +64 for the palette
-            if not check_exist(self.d_out, p): force_update(self.d_out, p, 0)  # Clear the bits first
+            if not check_exist(self.d_out, p):
+                force_update(self.d_out, p, 0)  # Clear the bits first
             self.d_out[p] |= (cx & 0xF) << (4 - ((x & 0x1) * 4))
 
         elif self.cf == self.FLAG.CF_INDEXED_8_BIT:
@@ -461,28 +538,39 @@ const lv_img_dsc_t {self.out_name} = {{
                 self.g_act = self._classify_pixel(self.g_act, 3)
                 self.b_act = self._classify_pixel(self.b_act, 2)
 
-                if self.r_act > 0xE0: self.r_act = 0xE0
-                if self.g_act > 0xE0: self.g_act = 0xE0
-                if self.b_act > 0xC0: self.b_act = 0xC0
+                if self.r_act > 0xE0:
+                    self.r_act = 0xE0
+                if self.g_act > 0xE0:
+                    self.g_act = 0xE0
+                if self.b_act > 0xC0:
+                    self.b_act = 0xC0
 
-            elif self.cf == self.FLAG.CF_TRUE_COLOR_565 or self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
-
+            elif (
+                self.cf == self.FLAG.CF_TRUE_COLOR_565
+                or self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP
+            ):
                 self.r_act = self._classify_pixel(self.r_act, 5)
                 self.g_act = self._classify_pixel(self.g_act, 6)
                 self.b_act = self._classify_pixel(self.b_act, 5)
 
-                if self.r_act > 0xF8: self.r_act = 0xF8
-                if self.g_act > 0xFC: self.g_act = 0xFC
-                if self.b_act > 0xF8: self.b_act = 0xF8
+                if self.r_act > 0xF8:
+                    self.r_act = 0xF8
+                if self.g_act > 0xFC:
+                    self.g_act = 0xFC
+                if self.b_act > 0xF8:
+                    self.b_act = 0xF8
 
             elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
                 self.r_act = self._classify_pixel(self.r_act, 8)
                 self.g_act = self._classify_pixel(self.g_act, 8)
                 self.b_act = self._classify_pixel(self.b_act, 8)
 
-                if self.r_act > 0xFF: self.r_act = 0xFF
-                if self.g_act > 0xFF: self.g_act = 0xFF
-                if self.b_act > 0xFF: self.b_act = 0xFF
+                if self.r_act > 0xFF:
+                    self.r_act = 0xFF
+                if self.g_act > 0xFF:
+                    self.g_act = 0xFF
+                if self.b_act > 0xFF:
+                    self.b_act = 0xFF
 
             self.r_err = r - self.r_act
             self.g_err = g - self.g_act
@@ -509,27 +597,39 @@ const lv_img_dsc_t {self.out_name} = {{
             self.g_act = self._classify_pixel(g, 3)
             self.b_act = self._classify_pixel(b, 2)
 
-            if self.r_act > 0xE0: self.r_act = 0xE0
-            if self.g_act > 0xE0: self.g_act = 0xE0
-            if self.b_act > 0xC0: self.b_act = 0xC0
+            if self.r_act > 0xE0:
+                self.r_act = 0xE0
+            if self.g_act > 0xE0:
+                self.g_act = 0xE0
+            if self.b_act > 0xC0:
+                self.b_act = 0xC0
 
-        elif self.cf == self.FLAG.CF_TRUE_COLOR_565 or self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP:
+        elif (
+            self.cf == self.FLAG.CF_TRUE_COLOR_565
+            or self.cf == self.FLAG.CF_TRUE_COLOR_565_SWAP
+        ):
             self.r_act = self._classify_pixel(r, 5)
             self.g_act = self._classify_pixel(g, 6)
             self.b_act = self._classify_pixel(b, 5)
 
-            if self.r_act > 0xF8: self.r_act = 0xF8
-            if self.g_act > 0xFC: self.g_act = 0xFC
-            if self.b_act > 0xF8: self.b_act = 0xF8
+            if self.r_act > 0xF8:
+                self.r_act = 0xF8
+            if self.g_act > 0xFC:
+                self.g_act = 0xFC
+            if self.b_act > 0xF8:
+                self.b_act = 0xF8
 
         elif self.cf == self.FLAG.CF_TRUE_COLOR_888:
             self.r_act = self._classify_pixel(r, 8)
             self.g_act = self._classify_pixel(g, 8)
             self.b_act = self._classify_pixel(b, 8)
 
-            if self.r_act > 0xFF: self.r_act = 0xFF
-            if self.g_act > 0xFF: self.g_act = 0xFF
-            if self.b_act > 0xFF: self.b_act = 0xFF
+            if self.r_act > 0xFF:
+                self.r_act = 0xFF
+            if self.g_act > 0xFF:
+                self.g_act = 0xFF
+            if self.b_act > 0xFF:
+                self.b_act = 0xFF
 
     @staticmethod
     def _classify_pixel(value, bits):
