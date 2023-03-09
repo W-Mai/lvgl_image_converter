@@ -255,8 +255,8 @@ class Converter(object):
         }.get(self.cf, 1)
 
         x_end = x_end * {
-            self.FLAG.CF_TRUE_COLOR_565: 2,
-            self.FLAG.CF_TRUE_COLOR_565_SWAP: 2,
+            self.FLAG.CF_TRUE_COLOR_565: 3 if self.alpha else 2,
+            self.FLAG.CF_TRUE_COLOR_565_SWAP: 3 if self.alpha else 2,
             self.FLAG.CF_TRUE_COLOR_888: 4
         }.get(self.cf, 1)
 

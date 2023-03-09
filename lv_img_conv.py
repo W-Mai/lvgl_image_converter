@@ -59,7 +59,7 @@ def conv_one_file(root: Path, filepath: Path, f, cf, ff: str, dither, out_path=P
 
     c_arr = ''
     if f in ['true_color', 'true_color_alpha', 'true_color_chroma']:
-        conv.convert(name2const[cf])
+        conv.convert(name2const[cf], 0 if f == 'true_color' else 1)
         c_arr = conv.format_to_c_array()
     else:
         conv.convert(name2const[f])
