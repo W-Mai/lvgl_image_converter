@@ -60,13 +60,17 @@ def check_allowed(filepath: Path):
     ]
 
 
-def conv_one_file(root: Path, filepath: Path, f, cf, ff: str, dither, out_path=Path()):
+def conv_one_file(
+    root: Path, filepath: Path, f, cf, ff: str, dither, bgr_mode, out_path=Path()
+):
     root_path = filepath.parent
     rel_path = Path()
     if len(root_path.parts) > 0:
         rel_path = root_path.relative_to(root)
     name = filepath.stem
-    conv = Converter(filepath.as_posix(), name, dither, name2const[f])
+    conv = Converter(
+        filepath.as_posix(), name, dither, name2const[f], cf_palette_bgr_en=bgr_mode
+    )
 
     c_arr = ""
     if f in ["true_color", "true_color_alpha", "true_color_chroma"]:
@@ -157,6 +161,9 @@ def parse_args():
         "-r", action="store_const", const=True, help="convert files recursively"
     )
     parser.add_argument("-d", action="store_const", const=True, help="need to dith")
+    parser.add_argument(
+        "-b", action="store_const", const=True, default=True, help="BGR mode"
+    )
     return parser.parse_args()
 
 
@@ -181,6 +188,7 @@ class Main(object):
                 self.args.cf,
                 self.args.ff,
                 self.args.d,
+                self.args.b,
                 self.output_path,
             )
             if conv_rtn == "SUCCESS":

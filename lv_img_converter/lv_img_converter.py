@@ -76,7 +76,7 @@ class Converter(object):
         out_name: str,
         dither: bool = True,
         cf=FLAG.CF_INDEXED_4_BIT,
-        cf_palette_bgr_en=0,
+        cf_palette_bgr_en=True,
     ):
         self.dither = None  # Dithering enable/disable
         self.w = None  # Image width
@@ -155,7 +155,7 @@ class Converter(object):
             for i in range(palette_size):
                 if i < real_palette_size:
                     c = get_color_from_palette(real_palette, i)
-                    if self.cf_palette_bgr_en == 1:
+                    if self.cf_palette_bgr_en:
                         c = [c[2 - i] for i in range(3)]
                     self.d_out.extend(c)
                     self.d_out.append(0xFF)
