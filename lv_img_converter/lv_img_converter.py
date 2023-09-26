@@ -425,10 +425,7 @@ const lv_img_dsc_t {self.out_name} = {{
 
         a = 0xFF
         if self.alpha and len(c) == 4:
-            a = (c[3] << 1)
-            if a & 2:
-                a |= 1
-            a = 255 - a
+            a = c[3]
 
         r, g, b = c[:3]
         cx = self.img.getpixel((x, y))
