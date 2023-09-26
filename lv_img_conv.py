@@ -178,7 +178,7 @@ class Main(object):
         self.failed_pic_paths = []
 
     def _convert_one(self, root, file):
-        print(f"{self.file_count:<5} {file} START", end="")
+        print(f"{self.file_count:<5} {file} START", end="\n")
         t0 = time.time()
         try:
             conv_rtn = conv_one_file(
