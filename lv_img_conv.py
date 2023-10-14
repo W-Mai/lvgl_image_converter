@@ -74,7 +74,7 @@ def conv_one_file(
 
     c_arr = ""
     if f in ["true_color", "true_color_alpha", "true_color_chroma"]:
-        conv.convert(name2const[cf], 0 if f == "true_color" else 1)
+        conv.convert(name2const[cf], 1 if f == "true_color_alpha" else 0)
         c_arr = conv.format_to_c_array()
     else:
         conv.convert(name2const[f])
