@@ -10,9 +10,9 @@
 ##############################################################
 
 
-import math
 import struct
 from typing import *
+from decimal import Decimal, ROUND_HALF_DOWN
 
 from PIL import Image
 
@@ -315,12 +315,12 @@ class Converter(object):
             self.FLAG.CF_RAW_CHROMA,
         ):
             tmp_str = "\n  " + ", \n  ".join(
-                ", ".join(tmp_arr[(x_end // 16) * x : (x_end // 16) * x + 16])
+                ", ".join(tmp_arr[(x_end // 16) * x: (x_end // 16) * x + 16])
                 for x in range(x_end // 16)
             )
         else:
             tmp_str = "\n  " + ", \n  ".join(
-                ", ".join(tmp_arr[y * x_end : (y + 1) * x_end]) for y in range(y_end)
+                ", ".join(tmp_arr[y * x_end: (y + 1) * x_end]) for y in range(y_end)
             )
 
         c_array += tmp_str
@@ -340,6 +340,7 @@ class Converter(object):
 #else
 #include "../lvgl/lvgl.h"
 #endif
+
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
@@ -349,6 +350,7 @@ class Converter(object):
 #ifndef {attr_name}
 #define {attr_name}
 #endif
+
 const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST {attr_name} uint8_t {self.out_name}_map[] = {{"""
         return c_header
 
@@ -421,7 +423,10 @@ const lv_img_dsc_t {self.out_name} = {{
         if self.img.mode == "P":
             c = get_color_from_palette(self.img.getpalette(), c)
 
-        a = c[3] if len(c) == 4 else 0xFF
+        a = 0xFF
+        if self.alpha and len(c) == 4:
+            a = c[3]
+
         r, g, b = c[:3]
         cx = self.img.getpixel((x, y))
         self._dither_next(r, g, b, x)
@@ -634,5 +639,5 @@ const lv_img_dsc_t {self.out_name} = {{
     @staticmethod
     def _classify_pixel(value, bits):
         tmp = 1 << (8 - bits)
-        val = math.ceil(value / tmp) * tmp
+        val = int(Decimal(str(value / tmp)).quantize(Decimal('0'), rounding=ROUND_HALF_DOWN)) * tmp
         return val if val >= 0 else 0
