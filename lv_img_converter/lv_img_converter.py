@@ -334,8 +334,23 @@ class Converter(object):
 
         return c_array
 
+    def __get_include_guard(self) -> AnyStr:
+        return "__" + self.out_name.upper() + "_H_"
+
     def _get_c_header(self) -> AnyStr:
-        c_header = r"""#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+        attr_name = self.__get_include_guard()
+        c_header = rf"""#ifndef {attr_name}
+#define {attr_name}
+
+#ifdef __has_include
+    #if __has_include("lvgl.h")
+        #ifndef LV_LVGL_H_INCLUDE_SIMPLE
+            #define LV_LVGL_H_INCLUDE_SIMPLE
+        #endif
+    #endif
+#endif
+
+#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
 #include "lvgl.h"
 #else
 #include "../lvgl/lvgl.h"
@@ -382,6 +397,7 @@ const lv_img_dsc_t {self.out_name} = {{
             self.FLAG.CF_RAW_ALPHA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_ALPHA,",
             self.FLAG.CF_RAW_CHROMA: f"{len(self.d_out)},\n  .header.cf = LV_IMG_CF_RAW_CHROMA_KEYED,",
         }.get(cf, "") + f"\n  .data = {self.out_name}_map,\n}};\n"
+        c_footer += "\n#endif /* " + self.__get_include_guard() + " */"
         return c_footer
 
     def get_c_code_file(self, cf=-1, content="") -> AnyStr:

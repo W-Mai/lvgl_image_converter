@@ -82,6 +82,7 @@ def conv_one_file(
     file_conf = {
         "C": {"suffix": ".c", "mode": "w"},
         "BIN": {"suffix": ".bin", "mode": "wb"},
+        "H": {"suffix": ".h", "mode": "w"},
     }
 
     out_path = root_path if out_path == Path() else out_path
@@ -92,7 +93,7 @@ def conv_one_file(
     with open(out_path, file_conf[ff]["mode"]) as fi:
         res = (
             conv.get_c_code_file(name2const[f], c_arr)
-            if ff == "C"
+            if ff == "C" or ff == "H"
             else conv.get_bin_file(name2const[f])
         )
         fi.write(res)
@@ -147,8 +148,8 @@ def parse_args():
         "-file-format",
         type=str,
         default="C",
-        choices=["C", "BIN"],
-        help="converted file format: C(*.c), BIN(*.bin)",
+        choices=["C", "BIN", "H"],
+        help="converted file format: C(*.c), BIN(*.bin), H(*.h)",
     )
     parser.add_argument(
         "-o",
